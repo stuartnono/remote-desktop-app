@@ -4,7 +4,7 @@ const fs = require('fs')
 const bodyParser = require('body-parser')
 const socketIO = require('socket.io')
 const rateLimit = require('express-rate-limit')
-
+const mongoose = require('mongoose')
 // Import custom modules
 const authRoutes = require('./modules/auth')
 const generateCode = require('./modules/getnewcode')
@@ -30,6 +30,22 @@ app.use(bodyParser.json())
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+})
+
+//configs
+require('dotenv').config({ path: './config/config.env' })
+
+//connect mongoose
+mongoose.connect(process.env.DATABASE, { useNewUrlParser: true })
+const db = mongoose.connection
+
+// Check connection
+db.once('open', function () {
+  console.log('Connected to MongoDB')
+})
+// Check for db errors
+db.on('error', function (err) {
+  console.error(err)
 })
 
 // Setup routes

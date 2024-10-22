@@ -1,0 +1,4 @@
+config/config.env
+.vscode
+node_modules
+../remote-desktop-app/.env

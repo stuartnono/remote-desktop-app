@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controller</title>
+    <!-- Use correct path for Socket.IO client, based on your project setup -->
+    <script src="../node_modules/socket.io/client-dist/socket.io.js"></script>
+    
+    <script>
+        let socket;
+
+        function joinSession() {
+            const sessionCode = document.getElementById('sessionInput').value;
+            const token = 'token goes here';  // Replace with your actual JWT token
+
+            // Pass the token during the connection handshake
+            socket = io('https://localhost:5000', {
+                auth: {
+                    token: token  // Send token with handshake
+                }
+            });
+
+            // Handle successful connection
+            socket.on('connect', () => {
+                console.log('Successfully connected with token');
+                
+                // Emit the 'joinSession' event with the session code to connect to the host
+                socket.emit('joinSession', sessionCode);
+            });
+
+            // Confirm successful session join
+            socket.on('sessionJoined', () => {
+                alert('Successfully connected to the host!');
+            });
+
+            // Handle session errors
+            socket.on('sessionError', (message) => {
+                alert(`Error: ${message}`);
+            });
+
+            // Handle any connection errors (including token validation errors)
+            socket.on('connect_error', (err) => {
+                console.error('Connection error:', err.message);
+                alert('Failed to connect: ' + err.message);
+            });
+
+            // Simulate mouse movement (for testing)
+            document.addEventListener('mousemove', (event) => {
+                socket.emit('mouseMove', sessionCode, { x: event.clientX, y: event.clientY });
+            });
+
+            // Simulate key presses (for testing)
+            document.addEventListener('keydown', (event) => {
+                socket.emit('keyPress', sessionCode, [event.key]);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Controller - Remote Control</h1>
+    <input type="text" id="sessionInput" placeholder="Enter Session Code" />
+    <button onclick="joinSession()">Join Session</button>
+</body>
+</html>

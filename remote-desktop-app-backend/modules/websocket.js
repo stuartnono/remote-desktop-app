@@ -1,36 +1,63 @@
-const { spawn } = require('child_process');
+const crypto = require('crypto');
 const robot = require('robotjs');
+
+const activeSessions = {};  // Store active sessions
+
+// Function to generate a unique session code
+function generateSessionCode() {
+    return crypto.randomBytes(3).toString('hex');  // 6-character session code
+}
 
 module.exports = (io) => {
     io.on('connection', (socket) => {
-        console.log(`User connected: ${socket.id}`);
-
-        // Start FFmpeg process for screen capture
-        const ffmpeg = spawn('ffmpeg', [
-            '-f', 'gdigrab', 
-            '-i', 'desktop',
-            '-framerate', '15',
-            '-video_size', '1280x720',
-            '-f', 'mpegts', '-',
-        ]);
-
-        ffmpeg.stdout.on('data', (data) => {
-            socket.emit('screenData', data);
+        console.log(`New connection: ${socket.id}`);
+        
+        // When the host starts the session
+        socket.on('startHostSession', () => {
+            const sessionCode = generateSessionCode();
+            activeSessions[sessionCode] = { hostSocket: socket };
+            socket.emit('sessionCode', sessionCode);  // Send session code to the host
+            console.log(`Host started session: ${sessionCode}`);
+        });
+   
+        // When a controller joins using a session code
+        socket.on('joinSession', (sessionCode) => {
+            const session = activeSessions[sessionCode];
+            if (session && session.hostSocket) {
+                session.controllerSocket = socket;
+                socket.emit('sessionJoined', true);  // Notify controller of successful connection
+                session.hostSocket.emit('controllerConnected', true);  // Notify host of controller connection
+                console.log(`Controller joined session: ${sessionCode}`);
+            } else {
+                socket.emit('sessionError', 'Invalid session code');
+            }
         });
 
-        socket.on('mouseMove', (data) => {
-            robot.moveMouse(data.x, data.y);
+        // Mouse movement relay from controller to host
+        socket.on('mouseMove', (sessionCode, data) => {
+            const session = activeSessions[sessionCode];
+            if (session && session.hostSocket) {
+                session.hostSocket.emit('mouseMove', data);  // Forward mouse move to host
+            }
         });
 
-        socket.on('keyPress', (keys) => {
-            keys.forEach((key) => {
-                robot.keyTap(key);
-            });
+        // Key press relay from controller to host
+        socket.on('keyPress', (sessionCode, keys) => {
+            const session = activeSessions[sessionCode];
+            if (session && session.hostSocket) {
+                session.hostSocket.emit('keyPress', keys);  // Forward key press to host
+            }
         });
 
+        // Handle disconnection of host or controller
         socket.on('disconnect', () => {
-            console.log('User disconnected:', socket.id);
-            ffmpeg.kill('SIGINT');
+            Object.keys(activeSessions).forEach(sessionCode => {
+                const session = activeSessions[sessionCode];
+                if (session.hostSocket === socket || session.controllerSocket === socket) {
+                    delete activeSessions[sessionCode];  // Remove session on disconnect
+                    console.log(`Session ended: ${sessionCode}`);
+                }
+            });
         });
     });
 };

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host</title>
+    <!-- Use correct path for Socket.IO client, based on your project setup -->
+    <script src="../node_modules/socket.io/client-dist/socket.io.js"></script>
+    
+    <script>
+        let socket;
+
+        function startHostSession() {
+            const token = 'token goes here';  // Replace with your actual JWT token
+
+            // Pass the token during the connection handshake
+            socket = io('https://localhost:5000', {
+                auth: {
+                    token: token  // Send token with handshake
+                }
+            });
+
+            // Handle successful connection
+            socket.on('connect', () => {
+                console.log('Host connected successfully with token');
+                
+                // Emit the 'startHostSession' event to generate a session code
+                socket.emit('startHostSession');
+            });
+
+            // Receive and display the generated session code
+            socket.on('sessionCode', (sessionCode) => {
+                document.getElementById('sessionCode').innerText = `Session Code: ${sessionCode}`;
+            });
+
+            // Listen for controller connection
+            socket.on('controllerConnected', () => {
+                alert('Controller has connected!');
+            });
+
+            // Handle mouse movement and key press data from the controller
+            socket.on('mouseMove', (data) => {
+                console.log(`Mouse moved: x=${data.x}, y=${data.y}`);
+            });
+
+            socket.on('keyPress', (keys) => {
+                console.log(`Keys pressed: ${keys.join(', ')}`);
+            });
+
+            // Handle connection errors (e.g., invalid token)
+            socket.on('connect_error', (err) => {
+                console.error('Connection error:', err.message);
+                alert('Failed to connect: ' + err.message);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Host - Remote Control</h1>
+    <button onclick="startHostSession()">Start Session</button>
+    <p id="sessionCode">Session Code: </p>
+</body>
+</html>

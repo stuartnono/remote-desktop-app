@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class Sidebar extends StatelessWidget {
   final Function(int) onTap;
+  final int currentIndex; // Track the selected page index
 
-  const Sidebar({required this.onTap});
+  const Sidebar({required this.onTap, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -12,29 +13,58 @@ class Sidebar extends StatelessWidget {
       color: Colors.grey[200],
       child: Column(
         children: [
-          ListTile(
-            leading: Icon(Icons.screen_share, color: Colors.blue),
-            title: Text("Remote Access"),
-            onTap: () => onTap(0),
+          _buildSidebarItem(
+            context,
+            index: 0,
+            title: "Remote Access",
+            icon: Icons.screen_share,
           ),
-          ListTile(
-            leading: Icon(Icons.connect_without_contact, color: Colors.blue),
-            title: Text("Connect"),
-            onTap: () => onTap(1),
+          _buildSidebarItem(
+            context,
+            index: 1,
+            title: "Connect",
+            icon: Icons.connect_without_contact,
           ),
-          ListTile(
-            leading: Icon(Icons.star, color: Colors.blue),
-            title: Text("Favorites"),
-            onTap: () => onTap(2),
+          _buildSidebarItem(
+            context,
+            index: 2,
+            title: "Favorites",
+            icon: Icons.star,
           ),
           Spacer(),
-          ListTile(
-            leading: Icon(Icons.settings, color: Colors.blue),
-            title: Text("Settings"),
-            onTap: () => onTap(3),
+          _buildSidebarItem(
+            context,
+            index: 3,
+            title: "Settings",
+            icon: Icons.settings,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSidebarItem(BuildContext context,
+      {required int index, required String title, required IconData icon}) {
+    final bool isSelected = index == currentIndex;
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? Colors.blueAccent : Colors.blue),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.blueAccent : Colors.black,
+        ),
+      ),
+      onTap: () => onTap(index),
+      tileColor: isSelected ? Colors.blue[50] : Colors.transparent,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+      trailing: isSelected
+          ? Container(
+        width: 4,
+        height: 20,
+        color: Colors.blueAccent,
+      )
+          : null,
     );
   }
 }

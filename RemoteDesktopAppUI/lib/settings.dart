@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class SettingsPage extends StatefulWidget {
+  final Function(bool) onDarkModeToggle;
+
+  SettingsPage({required this.onDarkModeToggle});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
@@ -39,6 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
               onChanged: (bool value) {
                 setState(() {
                   _darkModeEnabled = value;
+                  widget.onDarkModeToggle(value); // Update the main app's dark mode state
                 });
               },
             ),

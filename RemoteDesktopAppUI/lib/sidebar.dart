@@ -2,39 +2,79 @@ import 'package:flutter/material.dart';
 
 class Sidebar extends StatelessWidget {
   final Function(int) onTap;
+  final int currentIndex; // Track the selected page index
 
-  const Sidebar({required this.onTap});
+  const Sidebar({required this.onTap, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200, // Fixed width for sidebar
-      color: Colors.grey[200],
+      width: 220, // Slightly wider for better icon spacing
+      decoration: BoxDecoration(
+        color: Colors.blueGrey[50], // Soft background color
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(16.0),
+          bottomRight: Radius.circular(16.0),
+        ),
+      ),
       child: Column(
         children: [
-          ListTile(
-            leading: Icon(Icons.screen_share, color: Colors.blue),
-            title: Text("Remote Access"),
-            onTap: () => onTap(0),
+          _buildSidebarItem(
+            context,
+            index: 0,
+            title: "Remote Access",
+            icon: Icons.screen_share,
           ),
-          ListTile(
-            leading: Icon(Icons.connect_without_contact, color: Colors.blue),
-            title: Text("Connect"),
-            onTap: () => onTap(1),
+          _buildSidebarItem(
+            context,
+            index: 1,
+            title: "Connect",
+            icon: Icons.connect_without_contact,
           ),
-          ListTile(
-            leading: Icon(Icons.star, color: Colors.blue),
-            title: Text("Favorites"),
-            onTap: () => onTap(2),
+          _buildSidebarItem(
+            context,
+            index: 2,
+            title: "Favorites",
+            icon: Icons.star,
           ),
-          Spacer(),
-          ListTile(
-            leading: Icon(Icons.settings, color: Colors.blue),
-            title: Text("Settings"),
-            onTap: () => onTap(3),
+          _buildSidebarItem(
+            context,
+            index: 3,
+            title: "Settings",
+            icon: Icons.settings,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSidebarItem(BuildContext context,
+      {required int index, required String title, required IconData icon}) {
+    final bool isSelected = index == currentIndex;
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isSelected ? Colors.blueAccent : Colors.grey[700],
+        size: 28, // Larger icon for better visibility
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          color: isSelected ? Colors.blueAccent : Colors.black87,
+        ),
+      ),
+      onTap: () => onTap(index),
+      tileColor: isSelected ? Colors.blue[50] : Colors.transparent,
+      contentPadding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+      trailing: isSelected
+          ? Container(
+        width: 4,
+        height: 20,
+        color: Colors.blueAccent,
+      )
+          : null,
     );
   }
 }
